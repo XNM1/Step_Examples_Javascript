@@ -1,0 +1,34 @@
+version: "3.7"
+
+volumes:
+    data-s3:
+    data-s3-logs:
+    data-dgraph:
+
+networks:
+    network:
+
+services:
+    s3-ninja:
+        image: scireum/s3-ninja:7.0.1
+        volumes:
+            - data-s3:/home/sirius/data
+            - data-s3-logs:/home/sirius/logs
+        networks:
+            - network
+        ports:
+            - 9444:9000
+
+    frontend:
+        image: bash:5.1.8
+        hostname: frontend
+        networks:
+            - network
+        environment:
+            - NAME=frontend
+            - NODE_ENV=production
+        command: [ "bash", "-c", "apk add --update nodejs npm && cd client && npm update && npm install -g serve && serve -s build" ]
+        ports:
+            - 3000:5000
+        volumes:
+            - ./build:/client/build

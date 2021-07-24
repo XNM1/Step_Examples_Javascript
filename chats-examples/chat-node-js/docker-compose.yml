@@ -1,0 +1,46 @@
+version: "3.9"
+
+volumes:
+  db-data:
+
+networks:
+  chat-network:
+
+services:
+  backend:
+    image: bash:5.1.8
+    hostname: backend
+    networks:
+      - chat-network
+    ports:
+      - 80:80
+    environment:
+      - NAME=backend
+      - NODE_ENV=production
+    command: [ "bash", "-c", "apk add --update nodejs npm && cd chat-server && npm update && npm install && npm start" ]
+    volumes:
+      - ./backend/chat-server/index.js:/chat-server/index.js
+      - ./backend/chat-server/package.json:/chat-server/package.json
+
+  mongo:
+      image: mongo:5.0.0
+      networks:
+        - chat-network
+      ports:
+        - 27017:27017
+      volumes:
+          - db-data:/data/db
+
+  frontend:
+    image: bash:5.1.8
+    hostname: frontend
+    networks:
+      - chat-network
+    environment:
+      - NAME=frontend
+      - NODE_ENV=production
+    command: [ "bash", "-c", "apk add --update nodejs npm && cd chat-client && npm update && npm install -g serve && serve -s build" ]
+    ports:
+      - 3000:5000
+    volumes:
+      - ./frontend/chat-client/build:/chat-client/build
